@@ -10,6 +10,8 @@ namespace EncodingConverter
 
         public Logger Logger { get; set; }
 
+        public Encoding SourceEncoding { get; set; }
+
         public Encoding TargetEncoding { get; set; }
 
         public List<Encoding> SkipEncodings { get; set; } 
@@ -24,14 +26,27 @@ namespace EncodingConverter
             SkipEncodings = new List<Encoding>();
         }
 
-        public void Info()
+        public void Init()
         {
-            Logger.Info("System Character Encoding: {0}", Encoding.Default.EncodingName);
-            Logger.Info("Target Encoding: {0}", TargetEncoding.EncodingName);
+            if (Logger.Writers.Count == 0)
+            {
+                Logger.Writers.Add(Console.Out);
+            }
+
+            if (SkipEncodings.Count == 0)
+            {
+                SkipEncodings.Add(Encoding.Default);
+            }
+
+            SkipEncodings.Add(TargetEncoding);
+
+            Logger.Info("System Character Encoding: {0}", Encoding.Default.WebName);
+            Logger.Info("Target Encoding: {0}", TargetEncoding.WebName);
         }
 
         public void ConvertFile(string path)
         {
+            if (String.IsNullOrWhiteSpace(path)) return;
             if (Directory.Exists(path))
             {
                 Logger.Info("Scanning Directory: {0}", path);
@@ -42,11 +57,11 @@ namespace EncodingConverter
             }
             else if (File.Exists(path))
             {
-                var encoding = DetectEncoding(path);
+                var encoding = SourceEncoding ?? DetectEncoding(path);
                 if (SkipEncodings.Contains(encoding))
                 {
                     Logger.Debug("Skipping File With Accepted Encoding. Encoding: {0}, Path: {1}", 
-                        encoding.EncodingName,
+                        encoding.WebName,
                         path);
                 }
                 else
@@ -63,18 +78,18 @@ namespace EncodingConverter
 
         public void ConvertFile(string path, Encoding fromEncoding, Encoding toEncoding)
         {
+            if (String.IsNullOrWhiteSpace(path)) return;
             if (!File.Exists(path))
             {
                 Logger.Warning("File Doesn't Exist: {0}", path);
             }
             else
             {
-                Logger.Info("Converting From Encoding: {0}, To Encoding {1}, File: {2}", fromEncoding.EncodingName,
-                    toEncoding.EncodingName, path);
+                Logger.Info("Converting From Encoding: {0}, To Encoding {1}, File: {2}", fromEncoding.WebName,
+                    toEncoding.WebName, path);
                 try
                 {
                     var tempFileName = Path.GetTempFileName();
-                    bool success = false;
                     using (var inStream = File.OpenRead(path))
                     using (var outStream = File.OpenWrite(tempFileName))
                     {
@@ -88,25 +103,10 @@ namespace EncodingConverter
                                 outWriter.Write(buffer, 0, charactersRead);
                                 charactersRead = inReader.Read(buffer, 0, BufferSize);
                             }
-                            success = true;
                         }
                     }
-                    if (success)
-                    {
-                        File.Delete(path);
-                        File.Move(tempFileName, path);
-                    }
-                    if (File.Exists(tempFileName))
-                    {
-                        try
-                        {
-                            File.Delete(tempFileName);
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Warning("Couldn't Delete Temp File. File: {0}, Error: {1}", tempFileName, e.Message);
-                        }
-                    }
+                    File.Delete(path);
+                    File.Move(tempFileName, path);
                 }
                 catch (Exception e)
                 {
@@ -118,42 +118,45 @@ namespace EncodingConverter
         public Encoding DetectEncoding(string path)
         {
             Encoding encoding = Encoding.Default;
-            if (!File.Exists(path))
-            {
-                Logger.Warning("File Doesn't Exist: {0}", path);
-            }
-            else
-            {
-                var buffer = new byte[4];
-                using (var file = new FileStream(path, FileMode.Open))
+            if (!String.IsNullOrWhiteSpace(path))
+            { 
+                if (!File.Exists(path))
                 {
-                    file.Read(buffer, 0, 4);
+                    Logger.Warning("File Doesn't Exist: {0}", path);
                 }
-                if (buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF)
+                else
                 {
-                    encoding = Encoding.UTF8;
+                    var buffer = new byte[4];
+                    using (var file = new FileStream(path, FileMode.Open))
+                    {
+                        file.Read(buffer, 0, 4);
+                    }
+                    if (buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF)
+                    {
+                        encoding = Encoding.UTF8;
+                    }
+                    else if (buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xFE && buffer[3] == 0xFF)
+                    {
+                        encoding = Encoding.UTF32;
+                    }
+                    else if (buffer[0] == 0xFF && buffer[1] == 0xFE && buffer[2] == 0x00 && buffer[3] == 0x00)
+                    {
+                        encoding = Encoding.UTF32;
+                    }
+                    else if (buffer[0] == 0x2B && buffer[1] == 0x2F && buffer[2] == 0x76)
+                    {
+                        encoding = Encoding.UTF7;
+                    }
+                    else if (buffer[0] == 0xFE && buffer[1] == 0xFF)
+                    {
+                        encoding = Encoding.BigEndianUnicode;
+                    }
+                    else if (buffer[0] == 0xFF && buffer[1] == 0xFE)
+                    {
+                        encoding = Encoding.Unicode;
+                    }
                 }
-                else if (buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xFE && buffer[3] == 0xFF)
-                {
-                    encoding = Encoding.UTF32;
-                }
-                else if (buffer[0] == 0xFF && buffer[1] == 0xFE && buffer[2] == 0x00 && buffer[3] == 0x00)
-                {
-                    encoding = Encoding.UTF32;
-                }
-                else if (buffer[0] == 0x2B && buffer[1] == 0x2F && buffer[2] == 0x76)
-                {
-                    encoding = Encoding.UTF7;
-                }
-                else if (buffer[0] == 0xFE && buffer[1] == 0xFF)
-                {
-                    encoding = Encoding.BigEndianUnicode;
-                }
-                else if (buffer[0] == 0xFF && buffer[1] == 0xFE)
-                {
-                    encoding = Encoding.Unicode;
-                }
-            }
+}
             return encoding;
         }
  

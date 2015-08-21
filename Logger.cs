@@ -33,6 +33,7 @@ namespace EncodingConverter
                 foreach (var writer in Writers)
                 {
                     writer.WriteLine(LogFormat, DateTime.Now, level.ToString(), String.Format(format, args));
+                    writer.Flush();
                 }
             }
         }

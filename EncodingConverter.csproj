@@ -41,6 +41,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandLineParser.cs" />
     <Compile Include="Converter.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Program.cs" />
