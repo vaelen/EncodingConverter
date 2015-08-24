@@ -14,17 +14,9 @@ namespace EncodingConverter
 
     class Logger
     {
-        public string LogFormat { get; set; }
-        public LogLevel Level { get; set; }
-        public List<TextWriter> Writers { get; set; } 
-
-
-        public Logger()
-        {
-            Writers = new List<TextWriter>();
-            Level = LogLevel.Info;
-            LogFormat = "| {0:s} | {1} | {2}";
-        }
+        public string LogFormat { get; set; } = "| {0:s} | {1} | {2}";
+        public LogLevel Level { get; set; } = LogLevel.Info;
+        public List<TextWriter> Writers { get; set; }  = new List<TextWriter>();
 
         public void Log(LogLevel level, string format, params object[] args)
         {

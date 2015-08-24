@@ -66,7 +66,7 @@ namespace EncodingConverter
                     nextArg = args[i];
                 }
                 option.Command(nextArg);
-                lastOption = i;
+                lastOption = i + 1;
             }
 
             // Remove options from the argument list

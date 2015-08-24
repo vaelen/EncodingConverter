@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Encoding Converter")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("A simple utility meant mainly for converting between UTF encodings.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Andrew Young")]
 [assembly: AssemblyProduct("EncodingConverter")]

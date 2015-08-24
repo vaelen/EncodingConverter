@@ -15,6 +15,8 @@ namespace EncodingConverter
 
             InitializeCommandLineArguments(commandLineParser, converter);
 
+            if (args.Length == 0) PrintUsage();
+
             args = commandLineParser.Parse(args);
 
             converter.Init();
@@ -78,10 +80,11 @@ namespace EncodingConverter
 
             var verboseOption = new Option()
             {
+                Switch = true,
                 Command = x => converter.Logger.Level = LogLevel.Debug
             };
-            commandLineParser.Options["l"] = verboseOption;
-            commandLineParser.Options["log"] = verboseOption;
+            commandLineParser.Options["v"] = verboseOption;
+            commandLineParser.Options["verbose"] = verboseOption;
         }
 
         static void PrintUsage()
@@ -95,7 +98,7 @@ namespace EncodingConverter
             Console.WriteLine("\t-l,--log <file>: Log to a file.");
             Console.WriteLine("\t-v,--verbose: Turn on debug logging.");
             Console.WriteLine("\t-h,--help: Prints this message.");
-            Console.WriteLine("");
+            Console.WriteLine("Default Target Encoding: " + Encoding.UTF8.WebName);
             Console.WriteLine("Default Ignored Encodings: " + Encoding.Default.WebName);
 #if DEBUG
             Console.WriteLine("Press any key to continue...");

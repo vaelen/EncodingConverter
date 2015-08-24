@@ -8,23 +8,15 @@ namespace EncodingConverter
     class Converter
     {
 
-        public Logger Logger { get; set; }
+        public Logger Logger { get; set; } = new Logger();
 
         public Encoding SourceEncoding { get; set; }
 
-        public Encoding TargetEncoding { get; set; }
+        public Encoding TargetEncoding { get; set; } = Encoding.UTF8;
 
-        public List<Encoding> SkipEncodings { get; set; } 
+        public List<Encoding> SkipEncodings { get; set; } = new List<Encoding>();
 
-        public int BufferSize { get; set; }
-
-        public Converter()
-        {
-            BufferSize = 4096;
-            Logger = new Logger();
-            TargetEncoding = Encoding.UTF8;
-            SkipEncodings = new List<Encoding>();
-        }
+        public int BufferSize { get; set; } = 4096;
 
         public void Init()
         {
