@@ -73,7 +73,7 @@ namespace EncodingConverter
 
             var logFileOption = new Option()
             {
-                Command = x => converter.Logger.Writers.Add(new StreamWriter(File.OpenWrite(x)))
+                Command = x => converter.Logger.Writers.Add(new StreamWriter(File.Open(x, FileMode.Append)))
             };
             commandLineParser.Options["l"] = logFileOption;
             commandLineParser.Options["log"] = logFileOption;
